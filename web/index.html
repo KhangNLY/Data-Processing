@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Chili Smart-Farm Data Lab — Xử lý dữ liệu cảm biến đất & dự báo | TP.HCM</title>
+  <meta name="description" content="Demo web phân tích dataset IoT-Agriculture soil_all_extended.json (ớt, TP.HCM): làm sạch missing/outlier, EDA, ACF/PACF, mô hình RF/XGBoost/LSTM và dự báo các điểm dữ liệu sắp tới.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><div class="logo">🌶️</div><div><b>Chili Smart-Farm Data Lab</b><small>Kỹ thuật xử lý dữ liệu · IoT nông nghiệp · TP.HCM</small></div></div>
+    <nav id="nav">
+      <button data-view="overview" class="active">Tổng quan</button>
+      <button data-view="explore">Dữ liệu &amp; Lỗi</button>
+      <button data-view="eda">EDA</button>
+      <button data-view="prep">Kỹ thuật xử lý</button>
+      <button data-view="model">Mô hình</button>
+      <button data-view="forecast">Dự báo</button>
+      <button data-view="alerts">Cảnh báo &amp; Live</button>
+      <button data-view="checklist">Checklist &amp; Tài liệu</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ============ TỔNG QUAN ============ -->
+  <section id="view-overview" class="view active">
+    <div class="hero">
+      <span class="pill real">Dataset IoT · soil_all_extended.json</span><span class="pill real">14/12/2025 → 31/08/2026 · 5 phút/bản ghi</span>
+      <h1 style="margin-top:14px">Từ <span>cảm biến thô có lỗi</span> đến <span>dữ liệu sạch &amp; dự báo</span> cho vườn ớt TP.HCM</h1>
+      <p>Pipeline xử lý dữ liệu chuỗi thời gian IoT: làm phẳng JSON Firebase → kiểm tra lưới 5 phút → phát hiện giá trị 0/outlier/stuck → điền missing → làm mượt → EDA → dự báo bằng Random Forest, XGBoost, LSTM. Mỗi kỹ thuật đều được <b>đo bằng thí nghiệm có số liệu</b> (ẩn ô dữ liệu hợp lệ rồi so lại, đo tác động lên sai số dự báo, walk-forward) thay vì chọn theo cảm tính.</p>
+    </div>
+    <div class="grid g3" id="kpis" style="grid-template-columns:repeat(6,1fr)"></div>
+    <div class="grid g-21" style="margin-top:18px">
+      <div class="card">
+        <h3>Sơ đồ luồng dữ liệu</h3><div class="sub">Cảm biến → Firebase → Xử lý → Mô hình → Dashboard</div>
+        <div class="flow">
+          <div class="node"><div class="ic">📡</div><b>Cảm biến đất/khí</b><span>10 chỉ số · 5 phút/bản ghi</span></div><div class="arrow">➜</div>
+          <div class="node"><div class="ic">🔥</div><b>Firebase JSON</b><span>day → HH:MM → chỉ số</span></div><div class="arrow">➜</div>
+          <div class="node"><div class="ic">🧹</div><b>Tiền xử lý</b><span>luật miền · Hampel · stuck · missing</span></div><div class="arrow">➜</div>
+          <div class="node"><div class="ic">🧠</div><b>Mô hình</b><span>Baseline · RF · XGB · LSTM</span></div><div class="arrow">➜</div>
+          <div class="node"><div class="ic">📊</div><b>Dashboard</b><span>dự báo · cảnh báo ngưỡng</span></div>
+        </div>
+        <div class="explain good" style="margin-top:16px"><b>Điểm nhấn:</b> mọi quyết định xử lý đều có bằng chứng đo được — <i>sai số điền</i> trên các ô hợp lệ bị ẩn, <i>mức trùng khớp</i> giữa các bộ phát hiện outlier, <i>tác động của tiền xử lý lên sai số dự báo</i> và backtest walk-forward theo thời gian.</div>
+      </div>
+      <div class="card">
+        <h3>Phạm vi dữ liệu</h3><div class="sub">Chuỗi liên tục, lưới 5 phút</div>
+        <div class="timeline" id="timeline"></div>
+        <div style="margin-top:10px;color:var(--muted);font-size:.78rem">14/12/2025 ───────────────────────────── 31/08/2026</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px"><h3>Bảng nguồn gốc bộ dữ liệu</h3><div class="sub">Ghi rõ nguồn của từng thành phần dữ liệu (checklist #3)</div><div id="prov"></div></div>
+  </section>
+
+  <!-- ============ EXPLORER ============ -->
+  <section id="view-explore" class="view">
+    <div class="section-title"><div><h2>Khám phá chuỗi thời gian &amp; lỗi cảm biến</h2><p>Chọn biến, tháng và cửa sổ thời gian. Lớp "Thô" so với "Đã làm sạch" cho thấy từng điểm bị gắn cờ và cách nó được sửa.</p></div></div>
+    <div class="card">
+      <div class="toolbar">
+        <select id="ex-var"></select><select id="ex-month"></select>
+        <select id="ex-span"><option value="0">Cả tháng</option><option value="3">3 ngày</option><option value="7" selected>7 ngày</option><option value="14">14 ngày</option></select>
+        <label class="legend-note">Bắt đầu từ ngày <input id="ex-start" type="range" min="0" max="27" value="19" style="vertical-align:middle;accent-color:#2ee6a6"></label>
+      </div>
+      <div class="toolbar" id="ex-layers"></div>
+      <div class="toolbar" id="ex-jumps"><span class="legend-note">Nhảy tới tình huống:</span></div>
+      <div class="chart-box tall"><canvas id="ex-chart"></canvas></div>
+      <div id="ex-stats" style="margin-top:10px"></div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3>Bảng điểm bất thường phát hiện bởi pipeline</h3><div class="sub" id="an-count"></div>
+      <div class="toolbar"><select id="an-var"></select><select id="an-type"></select></div>
+      <div id="an-tbl"></div>
+    </div>
+  </section>
+
+  <section id="view-eda" class="view"><div id="eda-root"><div class="loading">Đang tải EDA…</div></div></section>
+  <section id="view-prep" class="view"><div id="prep-root"><div class="loading">Đang tải…</div></div></section>
+  <section id="view-model" class="view"><div id="model-root"><div class="loading">Đang tải…</div></div></section>
+  <section id="view-forecast" class="view"><div id="forecast-root"><div class="loading">Đang tải…</div></div></section>
+  <section id="view-alerts" class="view"><div id="alerts-root"><div class="loading">Đang tải…</div></div></section>
+  <section id="view-checklist" class="view"><div id="checklist-root"></div></section>
+</main>
+<footer>
+  Chili Smart-Farm Data Lab · Dataset soil_all_extended.json (14/12/2025–31/08/2026, lưới 5 phút): thu thập từ Firebase (soil_all.json). Thời tiết: Open-Meteo archive. Mọi kết quả mô hình trong demo được tính ở <code>src/run_models.py</code>.
+</footer>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script src="js/core.js?v=2"></script>
+<script src="js/analysis_views.js?v=2"></script>
+<script src="js/forecast_views.js?v=2"></script>
+<script>
+  App.$$("#nav button").forEach(b => b.onclick = () => App.show(b.dataset.view));
+  const start = (location.hash||"#overview").slice(1);
+  App.show(App.views[start] || start==="checklist" ? start : "overview");
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "crop": "Ớt (Capsicum annuum), TP.HCM — ngưỡng tham khảo, cần hiệu chỉnh theo giống & loại đầu dò",
+  "note": "Ngưỡng do nhóm tự đặt dựa trên khoảng quan sát của đầu dò trong dataset và khuyến cáo canh tác phổ biến; không phải chuẩn nông học cố định.",
+  "rules": [
+    {"id": "WATER_LOW",   "var": "moisture",    "lt": 38,   "severity": "high",   "message": "Thiếu nước - cần tưới bổ sung"},
+    {"id": "WATER_HIGH",  "var": "moisture",    "gt": 62,   "severity": "medium", "message": "Đất quá ẩm - nguy cơ úng/thối rễ"},
+    {"id": "FERT_LOW",    "var": "EC",          "lt": 0.25, "severity": "high",   "message": "Thiếu phân (EC thấp) - cần bón/ tưới phân"},
+    {"id": "SALT_HIGH",   "var": "EC",          "gt": 1.5,  "severity": "high",   "message": "EC quá cao - nguy cơ sốc muối/bón quá liều"},
+    {"id": "N_LOW",       "var": "N",           "lt": 25,   "severity": "medium", "message": "Đạm (N) thấp"},
+    {"id": "P_LOW",       "var": "P",           "lt": 120,  "severity": "medium", "message": "Lân (P) thấp"},
+    {"id": "K_LOW",       "var": "K",           "lt": 130,  "severity": "medium", "message": "Kali (K) thấp"},
+    {"id": "PH_LOW",      "var": "pH",          "lt": 5.0,  "severity": "medium", "message": "Đất quá chua"},
+    {"id": "PH_HIGH",     "var": "pH",          "gt": 7.5,  "severity": "medium", "message": "pH cao - giảm hấp thu vi lượng"},
+    {"id": "HEAT",        "var": "temperature", "gt": 36,   "severity": "medium", "message": "Nắng nóng - nguy cơ rụng hoa"},
+    {"id": "HUMID_HIGH",  "var": "humidity",    "gt": 92,   "severity": "low",    "message": "Ẩm không khí rất cao - nguy cơ bệnh nấm"},
+    {"id": "SOILTEMP_HI", "var": "soiltemp",    "gt": 33,   "severity": "medium", "message": "Nhiệt độ đất cao"}
+  ],
+  "sensor_fault": "Cảnh báo SENSOR_FAULT khi giá trị = 0 (trừ ánh sáng ban đêm), NaN, ngoài khoảng vật lý, hoặc kẹt giá trị >= 12 bước liên tiếp."
+}
