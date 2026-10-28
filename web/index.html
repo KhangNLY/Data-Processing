@@ -2,100 +2,341 @@
 <html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Chili Smart-Farm Data Lab — Xử lý dữ liệu cảm biến đất & dự báo | TP.HCM</title>
-  <meta name="description" content="Demo web phân tích dataset IoT-Agriculture soil_all_extended.json (ớt, TP.HCM): làm sạch missing/outlier, EDA, ACF/PACF, mô hình RF/XGBoost/LSTM và dự báo các điểm dữ liệu sắp tới.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CHILI FARM OS — Hệ Thống Giám Sát &amp; Điều Hành Vườn Ớt Thông Minh</title>
+  <meta name="description" content="Trung tâm giám sát và điều hành vườn ớt thông minh: Hình ảnh trạm thực tế, mô hình 3D 360°, dự báo 24 giờ tới và gợi ý chăm sóc cây trồng tức thời.">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/style.css?v=20261028_16">
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-in">
-    <div class="brand"><div class="logo">🌶️</div><div><b>Chili Smart-Farm Data Lab</b><small>Kỹ thuật xử lý dữ liệu · IoT nông nghiệp · TP.HCM</small></div></div>
-    <nav id="nav">
-      <button data-view="overview" class="active">Tổng quan</button>
-      <button data-view="explore">Dữ liệu &amp; Lỗi</button>
-      <button data-view="eda">EDA</button>
-      <button data-view="prep">Kỹ thuật xử lý</button>
-      <button data-view="model">Mô hình</button>
-      <button data-view="forecast">Dự báo</button>
-      <button data-view="alerts">Cảnh báo &amp; Live</button>
-      <button data-view="checklist">Checklist &amp; Tài liệu</button>
-    </nav>
-  </div>
-</header>
 
-<main>
-  <!-- ============ TỔNG QUAN ============ -->
-  <section id="view-overview" class="view active">
-    <div class="hero">
-      <span class="pill real">Dataset IoT · soil_all_extended.json</span><span class="pill real">14/12/2025 → 31/08/2026 · 5 phút/bản ghi</span>
-      <h1 style="margin-top:14px">Từ <span>cảm biến thô có lỗi</span> đến <span>dữ liệu sạch &amp; dự báo</span> cho vườn ớt TP.HCM</h1>
-      <p>Pipeline xử lý dữ liệu chuỗi thời gian IoT: làm phẳng JSON Firebase → kiểm tra lưới 5 phút → phát hiện giá trị 0/outlier/stuck → điền missing → làm mượt → EDA → dự báo bằng Random Forest, XGBoost, LSTM. Mỗi kỹ thuật đều được <b>đo bằng thí nghiệm có số liệu</b> (ẩn ô dữ liệu hợp lệ rồi so lại, đo tác động lên sai số dự báo, walk-forward) thay vì chọn theo cảm tính.</p>
-    </div>
-    <div class="grid g3" id="kpis" style="grid-template-columns:repeat(6,1fr)"></div>
-    <div class="grid g-21" style="margin-top:18px">
-      <div class="card">
-        <h3>Sơ đồ luồng dữ liệu</h3><div class="sub">Cảm biến → Firebase → Xử lý → Mô hình → Dashboard</div>
-        <div class="flow">
-          <div class="node"><div class="ic">📡</div><b>Cảm biến đất/khí</b><span>10 chỉ số · 5 phút/bản ghi</span></div><div class="arrow">➜</div>
-          <div class="node"><div class="ic">🔥</div><b>Firebase JSON</b><span>day → HH:MM → chỉ số</span></div><div class="arrow">➜</div>
-          <div class="node"><div class="ic">🧹</div><b>Tiền xử lý</b><span>luật miền · Hampel · stuck · missing</span></div><div class="arrow">➜</div>
-          <div class="node"><div class="ic">🧠</div><b>Mô hình</b><span>Baseline · RF · XGB · LSTM</span></div><div class="arrow">➜</div>
-          <div class="node"><div class="ic">📊</div><b>Dashboard</b><span>dự báo · cảnh báo ngưỡng</span></div>
+  <!-- ================= TOP NAVIGATION BAR ================= -->
+  <header class="topbar">
+    <div class="topbar-container">
+      
+      <!-- Brand Logo -->
+      <a href="#monitor" class="brand">
+        <h1 class="brand-title">CHILLI FARM OS</h1>
+      </a>
+
+      <!-- Primary Nav Tabs -->
+      <nav class="nav-pills" id="nav-tabs">
+        <button class="nav-btn active" data-target="monitor">
+          <span>●</span> Giám Sát &amp; Vận Hành
+        </button>
+        <button class="nav-btn" data-target="forecast">
+          <span>●</span> Dự Báo 24h
+        </button>
+        <button class="nav-btn" data-target="history">
+          <span>●</span> Lịch Sử &amp; Sự Kiện
+        </button>
+      </nav>
+
+      <!-- Telemetry Status Pills -->
+      <div class="telemetry-status">
+        <div class="status-pill">
+          <span class="status-dot green pulse"></span>
+          <span>ESP32 Wi-Fi</span>
         </div>
-        <div class="explain good" style="margin-top:16px"><b>Điểm nhấn:</b> mọi quyết định xử lý đều có bằng chứng đo được — <i>sai số điền</i> trên các ô hợp lệ bị ẩn, <i>mức trùng khớp</i> giữa các bộ phát hiện outlier, <i>tác động của tiền xử lý lên sai số dự báo</i> và backtest walk-forward theo thời gian.</div>
+        <div class="status-pill">
+          <span class="status-dot green"></span>
+          <span>Firebase RTDB</span>
+        </div>
       </div>
-      <div class="card">
-        <h3>Phạm vi dữ liệu</h3><div class="sub">Chuỗi liên tục, lưới 5 phút</div>
-        <div class="timeline" id="timeline"></div>
-        <div style="margin-top:10px;color:var(--muted);font-size:.78rem">14/12/2025 ───────────────────────────── 31/08/2026</div>
+
+    </div>
+  </header>
+
+  <main>
+    <!-- ==========================================================================
+         VIEW 1: GIÁM SÁT & VẬN HÀNH (LIVE MONITOR & 3D DIGITAL TWIN)
+         ========================================================================== -->
+    <section id="view-monitor" class="view-section active" style="display: block;">
+      
+      <!-- Quick Status Strip -->
+      <div class="quick-status-strip">
+        <div class="strip-item">
+          <span class="strip-label">Tình trạng vườn:</span>
+          <span class="strip-tag ok" id="strip-status-tag">TỐT</span>
+          <span class="strip-val" id="strip-status-text">Ổn định (Tối ưu)</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Cập nhật:</span>
+          <span class="strip-val" id="strip-time">2026-08-31 23:55</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Lỗi cảm biến:</span>
+          <span class="strip-val" style="color: #4ade80;">0 sự cố</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Độ ẩm đất:</span>
+          <span class="strip-val" id="strip-moisture">51.8 %VWC</span>
+        </div>
+        <div class="strip-item">
+          <span class="strip-label">Dinh dưỡng EC:</span>
+          <span class="strip-val" id="strip-ec">0.64 mS/cm</span>
+        </div>
       </div>
-    </div>
-    <div class="card" style="margin-top:18px"><h3>Bảng nguồn gốc bộ dữ liệu</h3><div class="sub">Ghi rõ nguồn của từng thành phần dữ liệu (checklist #3)</div><div id="prov"></div></div>
-  </section>
 
-  <!-- ============ EXPLORER ============ -->
-  <section id="view-explore" class="view">
-    <div class="section-title"><div><h2>Khám phá chuỗi thời gian &amp; lỗi cảm biến</h2><p>Chọn biến, tháng và cửa sổ thời gian. Lớp "Thô" so với "Đã làm sạch" cho thấy từng điểm bị gắn cờ và cách nó được sửa.</p></div></div>
-    <div class="card">
-      <div class="toolbar">
-        <select id="ex-var"></select><select id="ex-month"></select>
-        <select id="ex-span"><option value="0">Cả tháng</option><option value="3">3 ngày</option><option value="7" selected>7 ngày</option><option value="14">14 ngày</option></select>
-        <label class="legend-note">Bắt đầu từ ngày <input id="ex-start" type="range" min="0" max="27" value="19" style="vertical-align:middle;accent-color:#2ee6a6"></label>
+      <!-- Center Stage: Motion Viewport & Virtual LCD Panel -->
+      <div class="stage-grid">
+        
+        <!-- Left: Visual Stage (Motion Canvas / 3D Rig / Architecture) -->
+        <div class="stage-card">
+          <div class="stage-header">
+            <div class="stage-title">
+              <h2>Hình Ảnh Thực Tế &amp; Mô Hình 3D</h2>
+            </div>
+            <div class="stage-mode-tabs">
+              <button class="mode-tab-btn active" data-mode="motion">Ảnh Trạm Thực Tế</button>
+              <button class="mode-tab-btn" data-mode="three">Mô Hình 3D 360°</button>
+            </div>
+          </div>
+
+          <!-- Motion Viewport -->
+          <div class="motion-viewport">
+            <!-- Mode 1: Animated Telemetry Canvas (Real Photos + Particle Effects) -->
+            <canvas id="canvas-motion" class="view-sublayer active"></canvas>
+            
+            <!-- Mode 2: Interactive 3D Model (Three.js) -->
+            <div id="three-container" class="view-sublayer"></div>
+
+            <!-- Overlay Angle Controls for Mode 1 -->
+            <div class="viewport-overlay-controls">
+              <button class="view-btn active" data-view="front">Mặt trước</button>
+              <button class="view-btn" data-view="top">Góc trên</button>
+            </div>
+
+            <!-- Live Telemetry Watermark -->
+            <div class="telemetry-indicator-badge">
+              <span class="status-dot green pulse"></span>
+              <span>LIVE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Virtual Touch LCD Panel & Hardware Relays -->
+        <div class="panel-card">
+          
+          <!-- Virtual LCD Touch Screen (Faithfully Recreated from Photo 3) -->
+          <div class="virtual-lcd-frame">
+            <div class="lcd-top-strip">
+              <div class="lcd-screen-title">
+                <span>●</span> MÀN HÌNH ĐIỀU KHIỂN IOT
+              </div>
+              <div class="lcd-screen-time">23:55:00</div>
+            </div>
+
+            <!-- Recommendation Box -->
+            <div class="lcd-box">
+              <div class="lcd-box-title">
+                <span>★</span> GỢI Ý CHĂM SÓC CÂY
+              </div>
+              <ul class="lcd-recommendation-list" id="lcd-rec-items">
+                <li>Bón thêm vôi để nâng độ pH của đất!</li>
+                <li>Tạm dừng bón thêm Lân (P) và Kali (K)!</li>
+                <li>Độ ẩm và dinh dưỡng trong giới hạn tối ưu.</li>
+              </ul>
+            </div>
+
+            <!-- Fertilizer & Detail Status 2-Column Grid -->
+            <div class="lcd-grid-2">
+              
+              <!-- Fertilizer Subcard -->
+              <div class="lcd-subcard">
+                <div class="lcd-subcard-title">Dinh Dưỡng NPK</div>
+                <div class="lcd-metric-row">
+                  <span class="name">Đạm (N)</span>
+                  <span class="status good" id="lcd-stat-n">Đạt</span>
+                </div>
+                <div class="lcd-metric-row">
+                  <span class="name">Lân (P)</span>
+                  <span class="status high" id="lcd-stat-p">Dư thừa</span>
+                </div>
+                <div class="lcd-metric-row">
+                  <span class="name">Kali (K)</span>
+                  <span class="status high" id="lcd-stat-k">Dư thừa</span>
+                </div>
+              </div>
+
+              <!-- Detail Status Subcard -->
+              <div class="lcd-subcard">
+                <div class="lcd-subcard-title">Chỉ Số Đất (pH &amp; EC)</div>
+                <div class="lcd-metric-row">
+                  <span class="name">pH Đất</span>
+                  <span class="status low" id="lcd-stat-ph">Thấp</span>
+                </div>
+                <div class="lcd-metric-row">
+                  <span class="name">Dẫn điện EC</span>
+                  <span class="status good" id="lcd-stat-ec">Đạt</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- LCD Touch Buttons -->
+            <div class="lcd-btn-strip">
+              <button class="lcd-btn">TRƯỚC</button>
+              <button class="lcd-btn">TIẾP</button>
+            </div>
+          </div>
+
+          <!-- Hardware Relay Switches -->
+          <div class="relay-controls">
+            <div class="relay-title">
+              <span>Điều Khiển Thiết Bị</span>
+              <span class="status-dot green"></span>
+            </div>
+            <div class="relay-grid">
+              
+              <!-- Relay 1: Water Pump -->
+              <div class="relay-switch-card">
+                <div class="relay-meta">
+                  <div class="name">Motor Tưới (Bơm)</div>
+                  <div class="desc">Béc phun sương ẩm</div>
+                </div>
+                <button class="switch-toggle-btn" id="btn-relay-pump">TẮT</button>
+              </div>
+
+              <!-- Relay 2: LED Light -->
+              <div class="relay-switch-card">
+                <div class="relay-meta">
+                  <div class="name">Đèn Chiếu Sáng</div>
+                  <div class="desc">Thanh LED quang hợp</div>
+                </div>
+                <button class="switch-toggle-btn active" id="btn-relay-light">BẬT</button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
       </div>
-      <div class="toolbar" id="ex-layers"></div>
-      <div class="toolbar" id="ex-jumps"><span class="legend-note">Nhảy tới tình huống:</span></div>
-      <div class="chart-box tall"><canvas id="ex-chart"></canvas></div>
-      <div id="ex-stats" style="margin-top:10px"></div>
-    </div>
-    <div class="card" style="margin-top:18px">
-      <h3>Bảng điểm bất thường phát hiện bởi pipeline</h3><div class="sub" id="an-count"></div>
-      <div class="toolbar"><select id="an-var"></select><select id="an-type"></select></div>
-      <div id="an-tbl"></div>
-    </div>
-  </section>
 
-  <section id="view-eda" class="view"><div id="eda-root"><div class="loading">Đang tải EDA…</div></div></section>
-  <section id="view-prep" class="view"><div id="prep-root"><div class="loading">Đang tải…</div></div></section>
-  <section id="view-model" class="view"><div id="model-root"><div class="loading">Đang tải…</div></div></section>
-  <section id="view-forecast" class="view"><div id="forecast-root"><div class="loading">Đang tải…</div></div></section>
-  <section id="view-alerts" class="view"><div id="alerts-root"><div class="loading">Đang tải…</div></div></section>
-  <section id="view-checklist" class="view"><div id="checklist-root"></div></section>
-</main>
-<footer>
-  Chili Smart-Farm Data Lab · Dataset soil_all_extended.json (14/12/2025–31/08/2026, lưới 5 phút): thu thập từ Firebase (soil_all.json). Thời tiết: Open-Meteo archive. Mọi kết quả mô hình trong demo được tính ở <code>src/run_models.py</code>.
-</footer>
+      <!-- 10 Glanceable Sensor Gauges (Minimalist Range Bars) -->
+      <div class="sensor-grid-title">
+        <h3>Thông Số Đất &amp; Không Khí Thực Tế</h3>
+        <p>10 chỉ số từ cảm biến đất 7in1 &amp; môi trường</p>
+      </div>
+      <div class="sensor-cards-grid" id="sensor-gauges-container">
+        <!-- Injected via App.renderSensorGauges() -->
+      </div>
 
-<script src="vendor/chart.umd.min.js"></script>
-<script src="js/core.js?v=2"></script>
-<script src="js/analysis_views.js?v=2"></script>
-<script src="js/forecast_views.js?v=2"></script>
-<script>
-  App.$$("#nav button").forEach(b => b.onclick = () => App.show(b.dataset.view));
-  const start = (location.hash||"#overview").slice(1);
-  App.show(App.views[start] || start==="checklist" ? start : "overview");
-</script>
+    </section>
+
+    <!-- ==========================================================================
+         VIEW 2: DỰ BÁO 24H (PREDICTIVE INTELLIGENCE)
+         ========================================================================== -->
+    <section id="view-forecast" class="view-section" style="display: none;">
+      
+      <div class="forecast-container">
+        
+        <!-- Main Forecast Chart Card -->
+        <div class="forecast-main-card">
+          <div class="forecast-toolbar">
+            <div class="selector-chip-group" id="forecast-chips-container">
+              <!-- Injected via ForecastView.setupChips() -->
+            </div>
+            <div class="stage-mode-tabs">
+              <button class="mode-tab-btn active" id="btn-fc-live">Dự Báo 24 Giờ Tới</button>
+              <button class="mode-tab-btn" id="btn-fc-bt">So Sánh Thực Tế</button>
+            </div>
+          </div>
+
+          <div class="forecast-chart-box">
+            <canvas id="forecast-chart"></canvas>
+          </div>
+        </div>
+
+        <!-- 24h Agronomic Action Advisory Sidebar -->
+        <div class="advisory-sidebar">
+          <div class="advisory-card">
+            <h3>
+              <span>Kế Hoạch &amp; Lưu Ý Chăm Sóc 24h</span>
+              <span class="status-dot green"></span>
+            </h3>
+            <div class="timeline-event-list" id="advisory-timeline-container">
+              <!-- Injected via ForecastView.renderAdvisoryTimeline() -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ==========================================================================
+         VIEW 3: LỊCH SỬ & SỰ KIỆN (HISTORICAL TRENDS & TIMELINE)
+         ========================================================================== -->
+    <section id="view-history" class="view-section" style="display: none;">
+      
+      <div class="history-card">
+        <div class="history-toolbar">
+          <div>
+            <h2 style="font-size: 1.15rem;">Lịch Sử Đo Đạc Theo Thời Gian</h2>
+            <p style="font-size: 0.76rem; color: var(--text-muted);">Dữ liệu ghi nhận liên tục từ hệ thống cảm biến</p>
+          </div>
+          <div class="stage-mode-tabs">
+            <button class="mode-tab-btn span-btn" data-span="1">24 giờ qua</button>
+            <button class="mode-tab-btn span-btn active" data-span="7">7 ngày qua</button>
+            <button class="mode-tab-btn span-btn" data-span="30">30 ngày qua</button>
+          </div>
+        </div>
+
+        <div class="history-chart-box">
+          <canvas id="history-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Real Field Event Pins -->
+      <div class="sensor-grid-title">
+        <h3>Nhật Ký Sự Kiện Quan Trọng</h3>
+        <p>Bấm vào từng sự kiện để xem chi tiết biến động trên biểu đồ</p>
+      </div>
+      <div class="events-strip">
+        
+        <div class="event-box" data-month="2026-03">
+          <div class="date">22/03 – 25/03/2026</div>
+          <div class="title" style="color: #f87171;">Sự Cố Bơm Hỏng</div>
+          <div class="desc">Độ ẩm đất tụt từ 52% xuống 24% trong 36 giờ do mất áp lực cấp nước.</div>
+        </div>
+
+        <div class="event-box" data-month="2026-08">
+          <div class="date">13/08/2026 05:30</div>
+          <div class="title" style="color: #38bdf8;">Đợt Bón Phân Kích Thích</div>
+          <div class="desc">Châm NPK qua hệ thống tưới; EC tăng vọt từ 0.3 lên 1.45 mS/cm.</div>
+        </div>
+
+        <div class="event-box" data-month="2026-08">
+          <div class="date">09/08 – 11/08/2026</div>
+          <div class="title" style="color: #fbbf24;">Bảo Trì Định Kỳ Trạm</div>
+          <div class="desc">Ngắt bơm tạm thời, kiểm toán độ chính xác đầu dò NPK trong đất.</div>
+        </div>
+
+        <div class="event-box" data-month="2026-05">
+          <div class="date">20/05 – 25/05/2026</div>
+          <div class="title" style="color: #4ade80;">Mưa Lớn Đầu Mùa</div>
+          <div class="desc">Lượng mưa tích lũy cao, tăng rửa trôi ion dinh dưỡng trong tầng đất rễ.</div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- Scripts -->
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="vendor/three.min.js"></script>
+  <script src="vendor/OrbitControls.js"></script>
+  <script src="js/visual_twin.js?v=20261028_16"></script>
+  <script src="js/forecast_views.js?v=20261028_17"></script>
+  <script src="js/core.js?v=20261028_14"></script>
 </body>
 </html>
