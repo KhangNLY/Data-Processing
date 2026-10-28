@@ -24,3 +24,10 @@ Thumbs.db
 # Logs
 *.log
 outputs/*.log
+
+# Temporary scratch & frames (trích xuất video, không cần commit)
+scratch_frames/
+scratch/
+
+# Khóa luận cũ (File DLP NextLabs mã hóa, không cần commit)
+KhoaLuanTotNghiep/

@@ -81,9 +81,9 @@ Kết quả kiểm toán trên toàn bộ chuỗi:
 Thay vì áp dụng cảm tính, **tất cả quyết định tiền xử lý đều được chứng minh bằng thí nghiệm định lượng** (đo sai số trên ô hợp lệ bị ẩn hoặc đo tác động lên sai số mô hình dự báo).
 
 ### 3.1. Kiểm toán giá trị 0 và bối cảnh vật lý cảm biến
-- **Lỗi cảm biến chết đồng thời:** Kiểm toán phát hiện 576 dòng (26–28/12) có đồng thời `temperature < 5` và `humidity < 5` (đầu dò DHT bị ngắt tín hiệu về 0) $\rightarrow$ Đánh dấu lỗi `zero_lỗi` và chuyển thành `NaN`.
+- **Lỗi cảm biến chết đồng thời:** Kiểm toán phát hiện 814 dòng (26–28/12) có đồng thời `temperature < 5` và `humidity < 5` (đầu dò DHT bị ngắt tín hiệu về 0) $\rightarrow$ Đánh dấu lỗi `zero_lỗi` và chuyển thành `NaN`.
 - **Hiện tượng vật lý của đầu dò dinh dưỡng (EC/N/P/K):** Các giá trị $= 0$ của nhóm NPK và EC chủ yếu xuất hiện khi độ ẩm đất `moisture < 12%` (độ ẩm median khi gặp $=0$ là $7.6\%$). Khi đất quá khô, các ion không thể dẫn điện qua điện cực đầu dò. Do đó: **Không xóa mù quáng các giá trị $= 0$ này**. Luật đề xuất: *Giá trị $= 0$ của EC/N/P/K chỉ coi là lỗi khi độ ẩm đất $\ge 12\%$*.
-- **Cảm biến ánh sáng (`light`):** Ở 28 ngày đầu, ánh sáng tương quan rất yếu với bức xạ mặt trời thời tiết ($r \approx 0.02$). Luật lọc ánh sáng: *Chỉ đánh dấu lỗi khi `light == 0` vào ban ngày trong điều kiện bức xạ $w\_rad > 300\ W/m^2$*.
+- **Cảm biến ánh sáng (`light`):** Ở giai đoạn đầu thử nghiệm thực tế, ánh sáng tương quan rất yếu với bức xạ mặt trời thời tiết ($r \approx 0.02$) do bị tán lá che khuất. Luật lọc ánh sáng: *Chỉ đánh dấu lỗi khi `light == 0` vào ban ngày trong điều kiện bức xạ $w\_rad > 300\ W/m^2$*.
 
 ### 3.2. Bộ phát hiện lỗi kết hợp (Luật miền + Hampel + Stuck)
 Hệ thống phân loại mỗi điểm đo thành 5 cờ lỗi:
